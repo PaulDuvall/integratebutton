@@ -17,7 +17,7 @@ Parameters:
     Type: String
     Description: GitHub Branch
     Default: "master"
-   GitHubToken:
+  GitHubToken:
     NoEcho: true
     Type: String
     Default: '{{resolve:secretsmanager:github/personal-access-token:SecretString}}'
