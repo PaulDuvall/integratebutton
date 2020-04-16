@@ -5,6 +5,7 @@ Parameters:
   SiteBucketName:
     Type: String
     Description: Name of bucket to create to host the website
+    Default: "www.integratebutton.com"
   GitHubUser:
     Type: String
     Description: GitHub User
@@ -34,43 +35,16 @@ Parameters:
     Type: String
     Default: "aws/codebuild/ubuntu-base:14.04"
     Description: The build image to use for building the app
-Metadata:
-  AWS::CloudFormation::Interface:
-    ParameterGroups:
-      - Label:
-          default: "Site Configuration"
-        Parameters:
-          - SiteBucketName
-      - Label:
-          default: "GitHub Configuration"
-        Parameters:
-          - GitHubToken
-          - GitHubUser
-          - GitHubRepo
-          - GitHubBranch
-      - Label:
-          default: "Build Configuration"
-        Parameters:
-          - BuildType
-          - BuildComputeType
-          - BuildImage
-    ParameterLabels:
-      SiteBucketName:
-        default: Name of S3 Bucket to create for website hosting
-      GitHubToken:
-        default: GitHub OAuth2 Token
-      GitHubUser: 
-        default: GitHub User/Org Name
-      GitHubRepo: 
-        default: GitHub Repository Name
-      GitHubBranch: 
-        default: GitHub Branch Name
-      BuildType: 
-        default: CodeBuild type
-      BuildComputeType: 
-        default: CodeBuild instance type
-      BuildImage: 
-        default: CodeBuild image
+  CreateS3Bucket: 
+    Description: Flag to Create or not Create an S3 Bucket to store website files
+    Default: donotcreate
+    Type: String
+    AllowedValues: 
+      - create
+      - donotcreate
+    ConstraintDescription: must specify create or donotcreate.
+Conditions: 
+  CreateWebsiteBucket: !Equals [ !Ref CreateS3Bucket, create ]
 Resources:
   CodeBuildRole:
     Type: AWS::IAM::Role
@@ -133,6 +107,7 @@ Resources:
           Version: '2012-10-17'
   SiteBucket:
     Type: AWS::S3::Bucket
+    Condition: CreateWebsiteBucket
     Properties:
       AccessControl: PublicRead
       BucketName: !Ref SiteBucketName
@@ -156,7 +131,7 @@ Resources:
       Source:
         Type: CODEPIPELINE
         BuildSpec: !Sub |
-          version: 0.1
+          version: 0.2
           phases:
             post_build:
               commands:
